@@ -1,4 +1,4 @@
-package gumble // import "layeh.com/gumble/gumble"
+package gumble // import "github.com/101Bas/gumble/gumble"
 
 import (
 	"crypto/x509"
@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/proto"
-	"layeh.com/gumble/gumble/MumbleProto"
-	"layeh.com/gumble/gumble/varint"
+	"github.com/101Bas/gumble/gumble/MumbleProto"
+	"github.com/101Bas/gumble/gumble/varint"
 )
 
 var (

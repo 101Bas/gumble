@@ -1,4 +1,4 @@
-package gumble // import "layeh.com/gumble/gumble"
+package gumble // import "github.com/101Bas/gumble/gumble"
 
 // Permission is a bitmask of permissions given to a certain user.
 type Permission int
