@@ -11,10 +11,6 @@ import (
 	"time"
 
 	"github.com/101Bas/gumble/gumble"
-	"bufio"
-	"regexp"
-	"log"
-	"fmt"
 )
 
 // State represents the state of a Stream.
@@ -41,13 +37,11 @@ type Stream struct {
 	Source Source
 	// Starting offset.
 	Offset time.Duration
-	// Duration
-	Duration time.Duration
 
-	client  *gumble.Client
-	cmd     *exec.Cmd
-	pipe    io.ReadCloser
-	errPipe io.ReadCloser
+	client *gumble.Client
+	cmd    *exec.Cmd
+	pipe   io.ReadCloser
+	//errPipe io.ReadCloser
 	pause   chan struct{}
 	elapsed int64
 
@@ -55,7 +49,6 @@ type Stream struct {
 
 	l  sync.Mutex
 	wg sync.WaitGroup
-	durationMutex *sync.Mutex
 }
 
 // New returns a new Stream for the given gumble Client and Source.
@@ -67,7 +60,6 @@ func New(client *gumble.Client, source Source) *Stream {
 		Command: "ffmpeg",
 		pause:   make(chan struct{}),
 		state:   StateInitial,
-		durationMutex: &sync.Mutex{},
 	}
 }
 
@@ -104,37 +96,46 @@ func (s *Stream) Play() error {
 		return err
 	}
 
-	s.errPipe, err = cmd.StderrPipe()
-	if err != nil {
-		return err
-	}
+	/*
+		s.errPipe, err = cmd.StderrPipe()
+		if err != nil {
+			return err
+		}
+	*/
 
 	// Read duration from stderr
-	go func() {
+	/*
+		go func() {
 
-		var line string
-		var err error
-		r := bufio.NewReader(s.errPipe)
+			var line string
+			var err error
+			r := bufio.NewReader(s.errPipe)
 
-		line, err = r.ReadString('\n')
-		for err == nil {
-			re := regexp.MustCompile("Duration: ([0-9]+)?:([0-9]+)?:([0-9]+)?")
-			matches := re.FindStringSubmatch(line)
-			if len(matches) > 0 {
-				s.durationMutex.Lock()
-				s.Duration, err = time.ParseDuration(fmt.Sprintf("%sh%sm%ss", matches[1], matches[2], matches[3]))
+			s.durationMutex.Lock()
+			defer s.durationMutex.Unlock()
+
+			line, err = r.ReadString('\n')
+			for err == nil {
+				re := regexp.MustCompile("Duration: ([0-9]+)?:([0-9]+)?:([0-9]+)?")
+				matches := re.FindStringSubmatch(line)
+				if len(matches) > 0 {
+					s.Duration, err = time.ParseDuration(fmt.Sprintf("%sh%sm%ss", matches[1], matches[2], matches[3]))
+					if err != nil {
+						log.Print(err)
+						return
+					}
+					return
+				}
+
+				line, err = r.ReadString('\n')
 				if err != nil {
 					log.Print(err)
 					return
 				}
-				s.durationMutex.Unlock()
-				return
 			}
 
-			line, err = r.ReadString('\n')
-		}
-
-	}()
+		}()
+	*/
 
 	if err := s.Source.start(cmd); err != nil {
 		return err
@@ -180,7 +181,7 @@ func (s *Stream) Stop() error {
 	}
 	s.cleanup()
 	s.Wait()
-	s.Duration = time.Second * 0
+	//s.Duration = time.Second * 0
 	return nil
 }
 
@@ -196,9 +197,12 @@ func (s *Stream) Elapsed() time.Duration {
 
 // Get duration for stream
 func (s Stream) GetDuration() time.Duration {
-	s.durationMutex.Lock()
-	defer s.durationMutex.Unlock()
-	return s.Duration
+	/*
+		s.durationMutex.Lock()
+		defer s.durationMutex.Unlock()
+		return s.Duration
+	*/
+	return time.Second
 }
 
 func (s Stream) GetElapsed() int64 {
